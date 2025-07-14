@@ -12,6 +12,9 @@ def main():
     print(f"Screen width: {SCREEN_WIDTH}")
     print(f"Screen height: {SCREEN_HEIGHT}")
 
+    clock = pygame.time.Clock() # ✅ Create a clock to control framerate
+    dt = 0 # ✅ Delta time, in seconds
+
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
