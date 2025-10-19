@@ -1,28 +1,74 @@
-# main.py
-
 import pygame
 from constants import *
+from player import Player
+from asteroid import Asteroid
+from shot import Shot
+from asteroidfeild import AsteroidField
 
-def main():
-    pygame.init()  # ✅ Initialize pygame
+pygame.init()
+screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+pygame.display.set_caption("Asteroids Clone")
+clock = pygame.time.Clock()
 
-    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))  # ✅ Create window
+# Sprite groups
+updatable = pygame.sprite.Group()
+drawable = pygame.sprite.Group()
+asteroids = pygame.sprite.Group()
+shots = pygame.sprite.Group()
 
-    print("Starting Asteroids!")
-    print(f"Screen width: {SCREEN_WIDTH}")
-    print(f"Screen height: {SCREEN_HEIGHT}")
+# Assign containers
+Player.containers = (updatable, drawable)
+Asteroid.containers = (asteroids, updatable, drawable)
+Shot.containers = (shots, updatable, drawable)
 
-    clock = pygame.time.Clock() # ✅ Create a clock to control framerate
-    dt = 0 # ✅ Delta time, in seconds
+# Game objects
+player = Player(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
+asteroid_field = AsteroidField(group=asteroids)
 
-    while True:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                return  # ✅ Allow window to close properly
+score = 0
+font = pygame.font.SysFont(None, 36)
 
-        screen.fill((0, 0, 0))  # ✅ Fill the screen with black
-        pygame.display.flip()   # ✅ Refresh the display
+running = True
+while running:
+    dt = clock.tick(60) / 1000  # Delta time in seconds
 
-if __name__ == "__main__":
-    main()
+    # --- Event handling ---
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+
+    # --- Update objects ---
+    for obj in list(updatable):
+        obj.update(dt)
+
+    asteroid_field.update(dt)
+
+    # --- Collision: shots vs asteroids ---
+    for shot in list(shots):
+        for asteroid in list(asteroids):
+            distance = shot.position.distance_to(asteroid.position)
+            if distance <= shot.radius + asteroid.radius:
+                shot.kill()
+                asteroid.kill()
+                score += 100  # Increase score
+
+    # --- Collision: player vs asteroids ---
+    for asteroid in list(asteroids):
+        distance = player.position.distance_to(asteroid.position)
+        if distance <= player.radius + asteroid.radius:
+            print("Game Over!")
+            running = False
+
+    # --- Draw everything ---
+    screen.fill((0, 0, 0))
+    for sprite in drawable:
+        sprite.draw(screen)
+
+    # Draw score
+    score_surface = font.render(f"Score: {score}", True, (255, 255, 255))
+    screen.blit(score_surface, (10, 10))
+
+    pygame.display.flip()
+
+pygame.quit()
 
